@@ -18,7 +18,7 @@ class Linkedin:
         self.geo = parameters.geoUrn
         # google chrome
         chrome_options = webdriver.ChromeOptions()
-        # chrome_options.add_argument("--headless")
+        chrome_options.add_argument("--headless")
         self.driver= webdriver.Chrome(executable_path=parameters.google_chrome_driver_path,chrome_options=chrome_options)
 
     def search_and_send_request(self):
