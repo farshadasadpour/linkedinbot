@@ -1,7 +1,7 @@
 from selenium import webdriver
-from webdriver_manager.chrome import ChromeDriverManager
+# from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.common.keys import Keys
-import csv, os.path, time
+import time
 import parameters
 
 
