@@ -17,6 +17,7 @@ pip install -r requirements.txt
 
 - Copy `parameters-sample.py` to `parameters.py` and edit `parameters.py`
 - Run `python main.py`
+- Please consider the chrome version and chrome driver path and version
 
 ## Contribution
 
