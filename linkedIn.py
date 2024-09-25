@@ -18,7 +18,7 @@ class Linkedin:
         self.geo = parameters.geoUrn
         # google chrome
         chrome_options = webdriver.ChromeOptions()
-        chrome_options.add_argument("--headless")
+        #chrome_options.add_argument("--headless")
         self.driver= webdriver.Chrome(executable_path=parameters.google_chrome_driver_path,chrome_options=chrome_options)
 
     def search_and_send_request(self):
@@ -27,8 +27,6 @@ class Linkedin:
         """
         for page in range(self.start_page, self.till_page + 1):
             print(f'\nINFO: Checking on page {page}')
-            # query_url = 'https://www.linkedin.com/search/results/people/?keywords=' + self.keywords + '&origin=GLOBAL_SEARCH_HEADER&page=' + str(page)
-            # query_url = f'https://www.linkedin.com/search/results/people/?activelyHiring="true"&geoUrn={self.geo}&keywords={self.keywords}&origin=FACETED_SEARCH&sid=nb&page={str(page)}'
             query_url = f'https://www.linkedin.com/search/results/people/?geoUrn={self.geo}&keywords={self.keywords}&origin=FACETED_SEARCH&sid=nb&page={str(page)}'
             print(query_url)
             self.driver.get(query_url)
