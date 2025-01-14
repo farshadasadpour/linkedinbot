@@ -1,91 +1,126 @@
 from selenium import webdriver
-# from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import TimeoutException, NoSuchElementException, WebDriverException
 import time
 import parameters
 
 
 class Linkedin:
-    def __init__(self) -> None:
-        """
-        get parameters form file
-        """
+    def __init__(self):
         self.username = parameters.linkedin_username
         self.password = parameters.linkedin_password
         self.keywords = parameters.keywords
         self.start_page = parameters.start_page
         self.till_page = parameters.till_page
         self.geo = parameters.geoUrn
-        # google chrome
+
+        # Chrome driver setup
         chrome_options = webdriver.ChromeOptions()
-        #chrome_options.add_argument("--headless")
-        self.driver= webdriver.Chrome(executable_path=parameters.google_chrome_driver_path,chrome_options=chrome_options)
+        chrome_options.add_argument("--start-maximized")
+        chrome_options.add_argument("--disable-notifications")
+        service = Service(parameters.google_chrome_driver_path)
+        self.driver = webdriver.Chrome(service=service, options=chrome_options)
+        self.wait = WebDriverWait(self.driver, 20)
+
+    def login(self):
+        """Logs into LinkedIn using the provided credentials."""
+        self.driver.get('https://www.linkedin.com/login')
+        self.wait.until(EC.presence_of_element_located((By.ID, 'username'))).send_keys(self.username)
+        self.driver.find_element(By.ID, 'password').send_keys(self.password)
+        self.driver.find_element(By.XPATH, '//*[@type="submit"]').click()
+        time.sleep(5)
 
     def search_and_send_request(self):
-        """
-        this method make connection in LinkedIn
-        """
+        """Searches for profiles and sends connection requests."""
         for page in range(self.start_page, self.till_page + 1):
-            print(f'\nINFO: Checking on page {page}')
-            query_url = f'https://www.linkedin.com/search/results/people/?geoUrn={self.geo}&keywords={self.keywords}&origin=FACETED_SEARCH&sid=nb&page={str(page)}'
-            print(query_url)
+            print(f'\nINFO: Checking page {page}')
+            query_url = (
+                f'https://www.linkedin.com/search/results/people/?geoUrn={self.geo}'
+                f'&keywords={self.keywords}&origin=FACETED_SEARCH&page={page}'
+            )
             self.driver.get(query_url)
             time.sleep(5)
-            self.driver.find_element_by_tag_name('html').send_keys(Keys.END)
-            time.sleep(5)
-            linkedin_urls = self.driver.find_elements_by_class_name('reusable-search__result-container')
-            print('INFO: %s connections found on page %s' % (len(linkedin_urls), page))
-            for index, result in enumerate(linkedin_urls, start=1):
-                text = result.text.split('\n')[0]
-                connection_action = result.find_elements_by_class_name('artdeco-button__text')
-                if connection_action:
-                    connection = connection_action[0]
-                else:
-                    print("%s ) CANT: %s" % (index, text))
-                    continue
-                if connection.text == 'Connect':
-                    self.send_connection(index, text, connection)
-                elif connection.text == 'Pending':
-                    print("%s ) PENDING: %s" % (index, text))
-                else:
-                    if text:
-                        print("%s ) CANT: %s" % (index, text))
-                    else:
-                        print(f"{index} ) ERROR: You might have reached limit")
-                        self.close_driver()
+
+            # Scroll to load all dynamic content
+            self.scroll_page()
+
+            try:
+                # Find all "Connect" buttons
+                connect_buttons = self.wait.until(
+                    EC.presence_of_all_elements_located((By.XPATH, "//button[.//span[text()='Connect']]"))
+                )
+                print(f"INFO: Found {len(connect_buttons)} 'Connect' buttons on page {page}")
+            except TimeoutException:
+                print(f"ERROR: No 'Connect' buttons found on page {page}")
+                continue
+
+            for index, button in enumerate(connect_buttons, start=1):
+                self.process_connection(button, index)
+
+            time.sleep(3)
 
         self.close_driver()
 
-    def send_connection(self, index, text, connection):
+    def process_connection(self, button, index):
+        """Processes individual connection requests."""
+        name = "Unknown"
         try:
-            coordinates = connection.location_once_scrolled_into_view
-            self.driver.execute_script("window.scrollTo(%s, %s);" % (coordinates['x'], coordinates['y']))
-            time.sleep(5)
-            connection.click()
-            time.sleep(5)
-            if self.driver.find_elements_by_class_name('artdeco-button--primary')[0].is_enabled():
-                self.driver.find_elements_by_class_name('artdeco-button--primary')[0].click()
-                print("%s ) SENT: %s" % (index, text))
-            else:
-                self.driver.find_elements_by_class_name('artdeco-modal__dismiss')[0].click()
-                print("%s ) CANT: %s" % (index, text))
+            # Extract name from aria-label
+            name = button.get_attribute("aria-label").replace("Invite ", "").replace(" to connect", "").strip()
+            print(f"INFO: Attempting to connect with {name}")
+
+            # Scroll into view and ensure the button is clickable
+            self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", button)
+            time.sleep(1)  # Allow time for adjustments
+
+            # Attempt to click
+            try:
+                button.click()
+            except WebDriverException:
+                print(f"ERROR: Click intercepted, trying JavaScript click for {name}")
+                self.driver.execute_script("arguments[0].click();", button)
+
+            time.sleep(2)  # Wait for any modals
+
+            # Handle modal if present
+            self.handle_modal(index, name)
         except Exception as e:
-            print('%s ) ERROR: %s' % (index, text))
-        time.sleep(5)
+            print(f"ERROR: Failed to connect with {name} - {e}")
+            self.save_debug_info()
+        finally:
+            print(f"INFO: Finished processing index {index}")
 
-    def login(self):
-        """
-        login to linkedin
-        """
-        self.driver.get('https://www.linkedin.com/login')
-        self.driver.find_element_by_id('username').send_keys(self.username)
-        self.driver.find_element_by_id('password').send_keys(self.password)
-        self.driver.find_element_by_xpath('//*[@type="submit"]').click()
-        time.sleep(10)
+    def handle_modal(self, index, name):
+        """Handles the confirmation modal for connection requests."""
+        try:
+            send_button = self.wait.until(EC.element_to_be_clickable(
+                (By.XPATH, "//button[contains(@class, 'artdeco-button--primary')]")
+            ))
+            send_button.click()
+            print(f"INFO: Connection request sent to {name}")
+        except TimeoutException:
+            print(f"INFO: No confirmation modal for {name}")
+        finally:
+            time.sleep(2)
 
-    # def write_csv_file(self):
-    #     file_name = self.csv_file_name
-    #     if not os.path.isfile(file_name): self.write.writerow(['Connection Summary'])
+    def scroll_page(self):
+        """Scrolls the page to load dynamic content."""
+        scroll_height = self.driver.execute_script("return document.body.scrollHeight")
+        for i in range(0, scroll_height, 1000):
+            self.driver.execute_script(f"window.scrollTo(0, {i});")
+            time.sleep(1)
+
+    def save_debug_info(self):
+        """Saves the page source for debugging."""
+        pass
+        # with open("debug_page_source.html", "w", encoding="utf-8") as file:
+        #     file.write(self.driver.page_source)
+        # print("DEBUG: Page source saved for analysis.")
 
     def close_driver(self):
+        """Closes the Selenium WebDriver."""
         self.driver.quit()
