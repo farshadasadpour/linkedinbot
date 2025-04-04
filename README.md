@@ -1,24 +1,74 @@
+# 🔗 LinkedIn Auto Connector Bot
 
-![](https://content.linkedin.com/content/dam/me/business/en-us/amp/brand-site/v2/bg/LI-Logo.svg.original.svg)
+This project is a LinkedIn automation tool written in Python using Selenium WebDriver. It searches for people using custom filters and sends connection requests automatically. It runs entirely in Docker using `docker-compose` and Selenium Grid for browser automation.
 
-# LinkedIn Networking
+---
 
-Python code to automatically expand your LinkedIn network based on your interest
+## 📦 Features
 
-## Prerequisites
+- Authenticates and logs into LinkedIn
+- Searches users by keywords and location
+- Sends connection requests automatically
+- Dockerized for portability and easy deployment
+- Logs activity to standard output for debugging
 
-Use the package manager [pip](https://pip.pypa.io/en/stable/) to install selenium.
+---
+
+## 🧰 Prerequisites
+
+- Docker
+- Docker Compose
+
+---
+
+## ⚙️ Environment Configuration
+
+Edit the `parameters.py` file and provide your LinkedIn credentials and search configuration:
+
+```python
+linkedin_username = "your_email@example.com"
+linkedin_password = "your_password"
+keywords = "DevOps Engineer"
+start_page = 1
+till_page = 3
+geoUrn = "103644278"  # Example: Iran
+```
+---
+## 🚀 How to Run
+
+### 1. Build and Run the Docker Container
 
 ```bash
-pip install -r requirements.txt
+docker-compose up --build
+
+```
+This will:
+
+Build your Python application image
+
+Start Selenium Chrome container
+
+Wait for Selenium to be ready
+
+Launch your LinkedIn bot
+
+### 2. View Logs
+```bash
+docker logs -f linkedin-bot
+
+```
+Logs are flushed in real-time so you can follow activity live.
+
+---
+## 🐳 Stop the Services
+To stop and remove the running containers, execute:
+```bash
+docker-compose down
 ```
 
-## How to use ?
+---
 
-- Copy `parameters-sample.py` to `parameters.py` and edit `parameters.py`
-- Run `python main.py`
-- Please consider the chrome version and chrome driver path and version
+## License
+This project is licensed under the MIT License. See the `LICENSE` file for details.
 
-## Contribution
 
-Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
