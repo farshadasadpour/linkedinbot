@@ -49,7 +49,7 @@ class Linkedin:
     def search_and_send_request(self):
         """Searches for profiles and sends connection requests."""
         for page in range(self.start_page, self.till_page + 1):
-            print(f'\nINFO: Checking page {page}')
+            print(f'\nINFO: Checking page {page}', flush=True)
             query_url = (
                 f'https://www.linkedin.com/search/results/people/?geoUrn={self.geo}'
                 f'&keywords={self.keywords}&origin=FACETED_SEARCH&profileLanguage="en"&page={page}'
@@ -65,9 +65,9 @@ class Linkedin:
                 connect_buttons = self.wait.until(
                     EC.presence_of_all_elements_located((By.XPATH, "//button[.//span[text()='Connect']]"))
                 )
-                print(f"INFO: Found {len(connect_buttons)} 'Connect' buttons on page {page}")
+                print(f"INFO: Found {len(connect_buttons)} 'Connect' buttons on page {page}", flush=True)
             except TimeoutException:
-                print(f"ERROR: No 'Connect' buttons found on page {page}")
+                print(f"ERROR: No 'Connect' buttons found on page {page}", flush=True)
                 continue
 
             for index, button in enumerate(connect_buttons, start=1):
@@ -83,7 +83,7 @@ class Linkedin:
         try:
             # Extract name from aria-label
             name = button.get_attribute("aria-label").replace("Invite ", "").replace(" to connect", "").strip()
-            print(f"INFO: Attempting to connect with {name}")
+            print(f"INFO: Attempting to connect with {name}", flush=True)
 
             # Scroll into view and ensure the button is clickable
             self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", button)
@@ -93,7 +93,7 @@ class Linkedin:
             try:
                 button.click()
             except WebDriverException:
-                print(f"ERROR: Click intercepted, trying JavaScript click for {name}")
+                print(f"ERROR: Click intercepted, trying JavaScript click for {name}", flush=True)
                 self.driver.execute_script("arguments[0].click();", button)
 
             time.sleep(2)  # Wait for any modals
@@ -101,10 +101,10 @@ class Linkedin:
             # Handle modal if present
             self.handle_modal(index, name)
         except Exception as e:
-            print(f"ERROR: Failed to connect with {name} - {e}")
+            print(f"ERROR: Failed to connect with {name} - {e}", flush=True)
             self.save_debug_info()
         finally:
-            print(f"INFO: Finished processing index {index}")
+            print(f"INFO: Finished processing index {index}", flush=True)
 
     def handle_modal(self, index, name):
         """Handles the confirmation modal for connection requests."""
@@ -113,9 +113,9 @@ class Linkedin:
                 (By.XPATH, "//button[contains(@class, 'artdeco-button--primary')]")
             ))
             send_button.click()
-            print(f"INFO: Connection request sent to {name}")
+            print(f"INFO: Connection request sent to {name}", flush=True)
         except TimeoutException:
-            print(f"INFO: No confirmation modal for {name}")
+            print(f"INFO: No confirmation modal for {name}", flush=True)
         finally:
             time.sleep(2)
 
