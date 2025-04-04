@@ -18,12 +18,20 @@ class Linkedin:
         self.till_page = parameters.till_page
         self.geo = parameters.geoUrn
 
-        # Chrome driver setup
+        # Configure Remote WebDriver
         chrome_options = webdriver.ChromeOptions()
-        chrome_options.add_argument("--start-maximized")
+        # chrome_options.add_argument("--start-maximized")
         chrome_options.add_argument("--disable-notifications")
-        service = Service(parameters.google_chrome_driver_path)
-        self.driver = webdriver.Chrome(service=service, options=chrome_options)
+        # chrome_options.add_argument("--headless")  # Run headless in Docker
+        chrome_options.add_argument("--no-sandbox")
+        chrome_options.add_argument("--disable-dev-shm-usage")
+        chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36")
+
+        # Connect to remote Selenium
+        self.driver = webdriver.Remote(
+            command_executor="http://localhost:4444/wd/hub",
+            options=chrome_options
+        )
         self.wait = WebDriverWait(self.driver, 20)
 
     def login(self):
@@ -40,7 +48,7 @@ class Linkedin:
             print(f'\nINFO: Checking page {page}')
             query_url = (
                 f'https://www.linkedin.com/search/results/people/?geoUrn={self.geo}'
-                f'&keywords={self.keywords}&origin=FACETED_SEARCH&page={page}'
+                f'&keywords={self.keywords}&origin=FACETED_SEARCH&profileLanguage="en"&page={page}'
             )
             self.driver.get(query_url)
             time.sleep(5)
