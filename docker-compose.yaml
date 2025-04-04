@@ -1,0 +1,32 @@
+services:
+  python_app:
+    build: .
+    container_name: linkedin-bot
+    depends_on:
+      selenium:
+        condition: service_healthy  # Ensures Python runs only when Selenium is ready
+    environment:
+      - SELENIUM_URL=http://selenium:4444/wd/hub
+    networks:
+      - linkedin-net
+    restart: "no"
+
+  selenium:
+    image: selenium/standalone-chrome:134.0-chromedriver-134.0-grid-4.30.0-20250323
+    container_name: selenium
+    ports:
+      - "4444:4444"
+      - "7900:7900"
+    shm_size: 2g
+    networks:
+      - linkedin-net
+    restart: unless-stopped
+    healthcheck:  # Adds a health check to confirm Selenium is ready
+      test: ["CMD", "curl", "-f", "http://localhost:4444/wd/hub/status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+networks:
+  linkedin-net:
+    driver: bridge

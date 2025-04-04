@@ -7,6 +7,8 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, NoSuchElementException, WebDriverException
 import time
 import parameters
+import os
+
 
 
 class Linkedin:
@@ -28,8 +30,10 @@ class Linkedin:
         chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36")
 
         # Connect to remote Selenium
+        SELENIUM_URL = os.getenv("SELENIUM_URL", "http://selenium:4444/wd/hub")
+
         self.driver = webdriver.Remote(
-            command_executor="http://localhost:4444/wd/hub",
+            command_executor=SELENIUM_URL,
             options=chrome_options
         )
         self.wait = WebDriverWait(self.driver, 20)
