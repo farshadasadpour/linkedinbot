@@ -1,6 +1,6 @@
 linkedin_username = 'linkedinuser'
 linkedin_password = 'linkedinpassword'
-keywords = 'DevOps,Linux,Python,AWS,SRE'
+title = 'DevOps'
 geoUrn = ''
 start_page = 10
 till_page = 200

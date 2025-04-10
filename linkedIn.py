@@ -15,7 +15,7 @@ class Linkedin:
     def __init__(self):
         self.username = parameters.linkedin_username
         self.password = parameters.linkedin_password
-        self.keywords = parameters.keywords
+        self.keywords = parameters.title
         self.start_page = parameters.start_page
         self.till_page = parameters.till_page
         self.geo = parameters.geoUrn
@@ -52,7 +52,7 @@ class Linkedin:
             print(f'\nINFO: Checking page {page}', flush=True)
             query_url = (
                 f'https://www.linkedin.com/search/results/people/?geoUrn={self.geo}'
-                f'&keywords={self.keywords}&origin=FACETED_SEARCH&profileLanguage="en"&page={page}'
+                f'&titleFreeText={self.title}&origin=FACETED_SEARCH&profileLanguage="en"&page={page}'
             )
             self.driver.get(query_url)
             time.sleep(5)
